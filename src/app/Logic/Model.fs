@@ -51,12 +51,22 @@ module Logic =
         let newRequestState = evolveRequest requestState event
         userRequests.Add (event.Request.RequestId, newRequestState)
 
+
+    let isContainedIn request1 request2 =
+        request1.Start <= request2.End && request1.End >= request2.Start
+        
     let overlapsWith request1 request2 =
-        request1.Start = request2.Start || request1.End = request2.End
-
+        request1.Start = request2.Start 
+        || request1.End = request2.End
+        || request1.End = request2.Start
+        || request1.Start = request2.End
+        || request1 |> isContainedIn request2 
+        || request2 |> isContainedIn request1
+        
     let overlapsWithAnyRequest (otherRequests: TimeOffRequest seq) request =
-        false //TODO: write this function using overlapsWith
-
+                            otherRequests
+                            |> Seq.exists (overlapsWith request)
+                            
     let createRequest activeUserRequests  request =
         if request |> overlapsWithAnyRequest activeUserRequests then
             Error "Overlapping request"
