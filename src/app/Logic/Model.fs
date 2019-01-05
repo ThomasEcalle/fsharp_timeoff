@@ -2,23 +2,30 @@
 
 open System
 
+type IDateProvider =
+   abstract member getDate: unit -> DateTime
+   
 // Then our commands
 type Command =
     | RequestTimeOff of TimeOffRequest
+    | CancelRequest of UserId * Guid
     | ValidateRequest of UserId * Guid with
     member this.UserId : UserId =
         match this with
         | RequestTimeOff request -> request.UserId
         | ValidateRequest (userId, _) -> userId
+        | CancelRequest (userId, _) -> userId
 
 // And our events
 type RequestEvent =
     | RequestCreated of TimeOffRequest
+    | RequestCanceled of TimeOffRequest
     | RequestValidated of TimeOffRequest with
     member this.Request : TimeOffRequest =
         match this with
         | RequestCreated request -> request
         | RequestValidated request -> request
+        | RequestCanceled request -> request
 
 // We then define the state of the system,
 // and our 2 main functions `decide` and `evolve`
@@ -67,11 +74,10 @@ module Logic =
                             otherRequests
                             |> Seq.exists (overlapsWith request)
                             
-    let createRequest activeUserRequests  request =
+    let createRequest (dateProvider: IDateProvider) activeUserRequests  request =
         if request |> overlapsWithAnyRequest activeUserRequests then
             Error "Overlapping request"
-        // This DateTime.Today must go away!
-        elif request.Start.Date <= DateTime.Today then
+        elif request.Start.Date <= dateProvider.getDate() then
             Error "The request starts in the past"
         else
             Ok [RequestCreated request]
@@ -82,8 +88,16 @@ module Logic =
             Ok [RequestValidated request]
         | _ ->
             Error "Request cannot be validated"
+    
+    let cancelRequest requestState =
+            match requestState with
+            | PendingValidation request
+            | Validated request ->
+                Ok [RequestCanceled request]
+            | _ ->
+                Error "Request cannot be cancelled"
 
-    let decide (userRequests: UserRequestsState) (user: User) (command: Command) =
+    let decide (dateProvider: IDateProvider)(userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
         match user with
         | Employee userId when userId <> relatedUserId ->
@@ -98,7 +112,7 @@ module Logic =
                     |> Seq.where (fun state -> state.IsActive)
                     |> Seq.map (fun state -> state.Request)
 
-                createRequest activeUserRequests request
+                createRequest dateProvider activeUserRequests request
 
             | ValidateRequest (_, requestId) ->
                 if user <> Manager then
@@ -106,3 +120,11 @@ module Logic =
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                     validateRequest requestState
+            | CancelRequest (_, requestId) ->
+                    let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
+                    if user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
+                            Error "Unable to cancel timeoff"
+                    else
+                        cancelRequest requestState
+                    
+                  
