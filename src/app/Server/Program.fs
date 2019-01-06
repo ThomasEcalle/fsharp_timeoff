@@ -2,7 +2,6 @@ module ServerCode.App
 
 open TimeOff
 open Storage.Events
-
 open System
 open System.IO
 open Microsoft.AspNetCore.Builder
@@ -14,6 +13,7 @@ open Giraffe
 open Giraffe.Serialization.Json
 open Giraffe.HttpStatusCodeHandlers.RequestErrors
 open FSharp.Control.Tasks
+open Giraffe
 open Thoth.Json.Giraffe
 
 // ---------------------------------
@@ -23,6 +23,8 @@ open Thoth.Json.Giraffe
 module HttpHandlers =
 
     open Microsoft.AspNetCore.Http
+    open TimeOff
+    open TimeOff
 
     [<CLIMutable>]
     type UserAndRequestId = {
@@ -55,18 +57,15 @@ module HttpHandlers =
                     return! (BAD_REQUEST message) next ctx
             }
 
-    let getUserBalance (authentifiedUser: User) (userName: string) =
+    let getUserBalance (retrieveBalance: User -> UserId -> Result<UserVacationBalance list, string>) (authentifiedUser: User) (userName: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             task {
-                let balance : UserVacationBalance = {
-                  UserName = userName
-                  BalanceYear = 2018
-                  CarriedOver = 0.0
-                  PortionAccruedToDate = 10.0
-                  TakenToDate = 0.0
-                  CurrentBalance = 10.
-                }
-                return! json balance next ctx
+                let result = retrieveBalance authentifiedUser userName
+                match result with
+                    | Ok [balance] -> return! json balance next ctx
+                    | Ok _ -> return! Successful.NO_CONTENT next ctx
+                    | Error message ->
+                        return! (BAD_REQUEST message) next ctx
             }
 
 // ---------------------------------
@@ -74,23 +73,37 @@ module HttpHandlers =
 // ---------------------------------
 
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
+
+    let dateProvider = new DummyDateProvider()
+    
+    let getUserState (userId: UserId) = 
+        let eventStream = eventStore.GetStream(userId)
+        eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
+        
+    let addToState userId events = 
+        let eventStream = eventStore.GetStream(userId)
+        eventStream.Append(events)
+        
+    let retrieveBalance  (authentifiedUser: User) (userName: UserId) =
+        let state = getUserState userName
+        let result = Logic.getBalance dateProvider state authentifiedUser userName
+        result
+        
     let handleCommand (user: User) (command: Command) =
         let userId = command.UserId
-
-        let eventStream = eventStore.GetStream(userId)
-        let state = eventStream.ReadAll() |> Seq.fold Logic.evolveUserRequests Map.empty
+        let state = getUserState userId
 
         // Decide how to handle the command
-        let result = Logic.decide state user command
+        let result = Logic.decide dateProvider state user command
 
         // Save events in case of success
         match result with
-        | Ok events -> eventStream.Append(events)
+        | Ok events -> addToState userId events
         | _ -> ()
 
         // Finally, return the result
         result
-        
+    
     choose [
         subRoute "/api"
             (choose [
@@ -103,7 +116,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                                     routex "/request/?" >=> HttpHandlers.requestTimeOff (handleCommand user)
                                     routex "/validate-request/?" >=> HttpHandlers.validateRequest (handleCommand user)
                                 ])
-                            GET >=> routef "/user-balance/%s" (HttpHandlers.getUserBalance user)
+                            GET >=> routef "/user-balance/%s" (HttpHandlers.getUserBalance retrieveBalance user)
                         ]
                     ))
             ])

@@ -10,6 +10,9 @@ type TodayDateProvider() =
         member this.getDate()  = 
             DateTime.Today
 
+let dateProvider = new TodayDateProvider()
+let todayDateProvider =  dateProvider :> IDateProvider
+
 let Given (events: RequestEvent list) = events
 let ConnectedAs (user: User) (events: RequestEvent list) = events, user
 let When (command: Command) (events: RequestEvent list, user: User) = events, user, command
@@ -21,7 +24,7 @@ let Then expected message (events: RequestEvent list, user: User, command: Comma
 
     let globalState = Seq.fold evolveGlobalState Map.empty events
     let userRequestsState = defaultArg (Map.tryFind command.UserId globalState) Map.empty
-    let result = Logic.decide (new TodayDateProvider()) userRequestsState user command
+    let result = Logic.decide dateProvider userRequestsState user command
     Expect.equal result expected message
 
 open System
@@ -85,7 +88,7 @@ let creationTests =
         UserId = "jdoe"
         RequestId = Guid.Empty
         Start = { Date = DateTime(2019, 03, 05); HalfDay = AM }
-        End = { Date = DateTime(2019, 03, 05); HalfDay = PM } }
+        End = { Date = DateTime(2019, 03, 05); HalfDay = AM } }
 
       Given [ ]
       |> ConnectedAs (Employee "jdoe")
@@ -169,5 +172,51 @@ let cancelationTests =
       |> ConnectedAs (Employee "thomas")
       |> When (CancelRequest ("thomas", request.RequestId))
       |> Then (Error "Unable to cancel timeoff") "The request should not have been canceled by the employee"
+    }
+    
+    test "An employee can ask to cancel today's timeoff" {
+          let request = {
+            UserId = "thomas"
+            RequestId = Guid.NewGuid()
+            Start = { Date = todayDateProvider.getDate(); HalfDay = AM }
+            End = { Date = todayDateProvider.getDate(); HalfDay = PM }
+          }
+          
+          Given [RequestCreated request]
+          |> ConnectedAs (Employee "thomas")
+          |> When (AskToCancelRequest ("thomas", request.RequestId))
+          |> Then (Ok [RequestCancellationSent request]) "The request should be waiting for cancellation"
+        }
+    
+    test "A manager can confirm a cancellation demand" {
+              let request = {
+                UserId = "thomas"
+                RequestId = Guid.NewGuid()
+                Start = { Date = todayDateProvider.getDate(); HalfDay = AM }
+                End = { Date = todayDateProvider.getDate(); HalfDay = PM }
+              }
+              
+              Given [RequestCreated request; RequestCancellationSent request]
+              |> ConnectedAs Manager
+              |> When (CancelRequest ("thomas", request.RequestId))
+              |> Then (Ok [RequestCanceled request]) "The request should be cancelled"
+            }
+        
+  ]
+  
+  
+  
+[<Tests>]
+let balanceTests = 
+  testList "balance Tests" [
+    test "Calcul one timeoff duration" {
+       let request = {
+          UserId = "thomas"
+          RequestId = Guid.NewGuid()
+          Start = { Date = DateTime(2019, 3, 1); HalfDay = AM }
+          End = { Date = DateTime(2019, 3, 14); HalfDay = PM }
+        }
+        
+       Expect.equal (Logic.getRequestDuration request) 14.0 "The requests duration is not good"
     }
   ]

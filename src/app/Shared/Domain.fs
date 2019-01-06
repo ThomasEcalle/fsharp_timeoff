@@ -30,7 +30,20 @@ type UserVacationBalance = {
   UserName : UserId
   BalanceYear: int
   CarriedOver: float
-  PortionAccruedToDate: float
   TakenToDate: float
+  Planned: float
   CurrentBalance: float
 }
+
+type IDateProvider =
+   abstract member getDate: unit -> DateTime
+   
+type TodayDateProvider() =    
+    interface IDateProvider with 
+        member this.getDate()  = 
+            DateTime.Today
+
+type DummyDateProvider() =    
+     interface IDateProvider with 
+         member this.getDate()  = 
+             DateTime(2019, 03, 05)
