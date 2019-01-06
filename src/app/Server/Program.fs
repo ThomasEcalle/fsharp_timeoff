@@ -31,6 +31,12 @@ module HttpHandlers =
         UserId: UserId
         RequestId: Guid
     }
+    
+    [<CLIMutable>]
+        type UserAndYear = {
+            UserId: UserId
+            Year: String
+        }
 
     let requestTimeOff (handleCommand: Command -> Result<RequestEvent list, string>) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -56,6 +62,18 @@ module HttpHandlers =
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
             }
+    
+    let cancelTimeoff (handleCommand: Command -> Result<RequestEvent list, string>) =
+            fun (next: HttpFunc) (ctx: HttpContext) ->
+                task {
+                    let userAndRequestId = ctx.BindQueryString<UserAndRequestId>()
+                    let command = CancelRequest (userAndRequestId.UserId, userAndRequestId.RequestId)
+                    let result = handleCommand command
+                    match result with
+                    | Ok requestCancelled -> return! json requestCancelled next ctx
+                    | Error message ->
+                        return! (BAD_REQUEST message) next ctx
+                }
 
     let getUserBalance (retrieveBalance: User -> UserId -> Result<UserVacationBalance list, string>) (authentifiedUser: User) (userName: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -67,6 +85,14 @@ module HttpHandlers =
                     | Error message ->
                         return! (BAD_REQUEST message) next ctx
             }
+            
+    let getUserHistoric (retrieveHistoric: User -> UserId -> DateTime -> seq<RequestEvent>) (authentifiedUser: User)  =
+            fun (next: HttpFunc) (ctx: HttpContext) ->
+                task {
+                    let userAndYear = ctx.BindQueryString<UserAndYear>()
+                    let result = retrieveHistoric authentifiedUser userAndYear.UserId (new DateTime(int(userAndYear.Year), 1, 1))
+                    return! json result next ctx
+                }
 
 // ---------------------------------
 // Web app
@@ -86,8 +112,11 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
         
     let retrieveBalance  (authentifiedUser: User) (userName: UserId) =
         let state = getUserState userName
-        let result = Logic.getBalance dateProvider state authentifiedUser userName
-        result
+        Logic.getBalance dateProvider state authentifiedUser userName
+        
+    let retrieveHistoric (authentifiedUser: User) (userName: UserId) (date: DateTime) =
+        let state = getUserState userName
+        eventStore.GetStream(userName).ReadAll() |> Logic.historicForYear date
         
     let handleCommand (user: User) (command: Command) =
         let userId = command.UserId
@@ -115,8 +144,10 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                                 (choose [                        
                                     routex "/request/?" >=> HttpHandlers.requestTimeOff (handleCommand user)
                                     routex "/validate-request/?" >=> HttpHandlers.validateRequest (handleCommand user)
+                                    routex "/cancel/?" >=> HttpHandlers.cancelTimeoff (handleCommand user)
                                 ])
                             GET >=> routef "/user-balance/%s" (HttpHandlers.getUserBalance retrieveBalance user)
+                            GET >=> routex "/user-historic/?" >=> HttpHandlers.getUserHistoric retrieveHistoric user
                         ]
                     ))
             ])

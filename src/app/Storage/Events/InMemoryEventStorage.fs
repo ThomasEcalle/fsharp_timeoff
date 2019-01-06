@@ -9,6 +9,9 @@ type private InMemoryStream<'TValue> () =
 
     member __.Append (values:'TValue list) =
       stream.AddRange values
+    
+    member __.Clear() =
+      stream.Clear()
 
 type InMemoryStream =
   static member Create<'TValue>() =

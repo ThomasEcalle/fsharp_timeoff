@@ -25,6 +25,11 @@ type private FileStream<'TValue> (path: string) =
       for value in values do
         let line = Serialization.serialize value
         writer.WriteLine line
+        
+    member __.Clear() =
+       let stream = new FileStream(path, FileMode.Append, FileAccess.Write)
+       System.IO.File.WriteAllText(path,"");
+   
 
 type private DirectoryStore<'TKey, 'TValue when 'TKey: comparison> (path: string, keyFormatter: 'TKey -> string) =
   do

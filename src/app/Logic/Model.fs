@@ -33,7 +33,6 @@ type RequestEvent =
 // and our 2 main functions `decide` and `evolve`
 module Logic =
     open System
-    open System
     open System.Text.RegularExpressions
     open System.Runtime.ConstrainedExecution
 
@@ -70,8 +69,7 @@ module Logic =
         let requestState = defaultArg (Map.tryFind event.Request.RequestId userRequests) NotCreated
         let newRequestState = evolveRequest requestState event
         userRequests.Add (event.Request.RequestId, newRequestState)
-
-
+            
     let isContainedIn request1 request2 =
         request1.Start <= request2.End && request1.End >= request2.Start
         
@@ -82,6 +80,9 @@ module Logic =
         || request1.Start = request2.End
         || request1 |> isContainedIn request2 
         || request2 |> isContainedIn request1
+   
+    let hasSameIdThan request1 request2 =
+        request1.RequestId = request2.RequestId
     
     let getRequestDuration request = 
         if request.Start.Date > request.End.Date then
@@ -102,9 +103,15 @@ module Logic =
                             otherRequests
                             |> Seq.exists (overlapsWith request)
                             
+    let hasSameIdThanAnyRequest (otherRequests: TimeOffRequest seq) request =
+                            otherRequests
+                            |> Seq.exists (hasSameIdThan request)
+                            
     let createRequest (dateProvider: IDateProvider) activeUserRequests  request =
         if request |> overlapsWithAnyRequest activeUserRequests then
             Error "Overlapping request"
+        elif request |> hasSameIdThanAnyRequest activeUserRequests then
+            Error "Request has same id than existing one"
         elif request.Start.Date <= dateProvider.getDate() then
             Error "The request starts in the past"
         else
@@ -171,8 +178,11 @@ module Logic =
                     |> Seq.sum
                 
                 float(daysObtainedTillFirstDay) - totalTimeOff
-            
-            
+    
+    let historicForYear (date: DateTime) (userRequestsEvents: seq<RequestEvent>) =
+        userRequestsEvents
+            |> Seq.where (fun event -> event.Request.Start.Date.Year = date.Year)
+            |> Seq.sortBy(fun event -> event.Request.Start.Date)
             
     let decide (dateProvider: IDateProvider)(userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId
@@ -199,7 +209,9 @@ module Logic =
                     validateRequest requestState
             | CancelRequest (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
-                if user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
+                if requestState = NotCreated then
+                        Error "request does not exist"
+                elif user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
                         Error "Unable to cancel timeoff"
                 else
                     cancelRequest requestState

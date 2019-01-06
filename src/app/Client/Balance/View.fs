@@ -35,13 +35,13 @@ let root model dispatch =
                       [
                         th [ ClassName "has-text-right" ] [ str (sprintf "Portion of %d allotment accrued to date" balance.BalanceYear) ]
                         td [] [ str "+" ]
-                        td [ ] [ str (sprintf "%.2f" balance.PortionAccruedToDate) ]
+                        td [ ] [ str (sprintf "%.2f" balance.TakenToDate) ]
                       ]
                     tr [ ]
                       [
                         th [ ClassName "has-text-right" ] [ str "Taken to date" ]
                         td [] [ str "-" ]
-                        td [ ] [ str (sprintf "%.2f" balance.TakenToDate) ]
+                        td [ ] [ str (sprintf "%.2f" balance.Planned) ]
                       ]
                     tr [ ]
                       [
