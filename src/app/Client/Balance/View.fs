@@ -27,22 +27,28 @@ let root model dispatch =
                       ]
                     tr [ ]
                       [
-                        th [ ClassName "has-text-right" ] [ str (sprintf "Carried over from %d" (balance.BalanceYear - 1)) ]
+                        th [ ClassName "has-text-right" ] [ str (sprintf "Carried over from %d" (balance.Year - 1)) ]
                         td [] []
                         td [ ] [ str (sprintf "%.2f" balance.CarriedOver) ]
                       ]
                     tr [ ]
                       [
-                        th [ ClassName "has-text-right" ] [ str (sprintf "Portion of %d allotment accrued to date" balance.BalanceYear) ]
+                        th [ ClassName "has-text-right" ] [ str (sprintf "Portion of %d allotment accrued to date" balance.Year) ]
                         td [] [ str "+" ]
-                        td [ ] [ str (sprintf "%.2f" balance.TakenToDate) ]
+                        td [ ] [ str (sprintf "%d" balance.BalanceYear) ]
                       ]
                     tr [ ]
                       [
                         th [ ClassName "has-text-right" ] [ str "Taken to date" ]
                         td [] [ str "-" ]
-                        td [ ] [ str (sprintf "%.2f" balance.Planned) ]
+                        td [ ] [ str (sprintf "%.2f" balance.TakenToDate) ]
                       ]
+                    tr [ ]
+                            [
+                              th [ ClassName "has-text-right" ] [ str "Planned" ]
+                              td [] [ str "-" ]
+                              td [ ] [ str (sprintf "%.2f" balance.Planned) ]
+                            ]
                     tr [ ]
                       [
                         th [ ClassName "has-text-right" ] [ str "Current balance" ]
@@ -52,7 +58,10 @@ let root model dispatch =
                   ]
               ]
           ]
+        Heading.h3 [ ]
+                    [ str "Events for employee "; str balance.UserName ]
       ]
+    
   | None ->
     div []
       [

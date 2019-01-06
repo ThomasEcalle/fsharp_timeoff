@@ -27,6 +27,7 @@ type TimeOffRequest = {
 
 [<CLIMutable>]
 type UserVacationBalance = {
+  Year : int
   UserName : UserId
   BalanceYear: int
   CarriedOver: float
@@ -34,6 +35,33 @@ type UserVacationBalance = {
   Planned: float
   CurrentBalance: float
 }
+
+
+// Then our commands
+type Command =
+    | RequestTimeOff of TimeOffRequest
+    | CancelRequest of UserId * Guid
+    | AskToCancelRequest of UserId * Guid
+    | ValidateRequest of UserId * Guid with
+    member this.UserId : UserId =
+        match this with
+        | RequestTimeOff request -> request.UserId
+        | ValidateRequest (userId, _) -> userId
+        | CancelRequest (userId, _) -> userId
+        | AskToCancelRequest (userId, _) -> userId
+
+// And our events
+type RequestEvent =
+    | RequestCreated of TimeOffRequest
+    | RequestCanceled of TimeOffRequest
+    | RequestCancellationSent of TimeOffRequest
+    | RequestValidated of TimeOffRequest with
+    member this.Request : TimeOffRequest =
+        match this with
+        | RequestCreated request -> request
+        | RequestValidated request -> request
+        | RequestCanceled request -> request
+        | RequestCancellationSent request -> request
 
 type IDateProvider =
    abstract member getDate: unit -> DateTime

@@ -6,6 +6,8 @@
     "font-awesome": "^4.7.0",
     "react": "16.6.0",
     "react-bootstrap": "0.32.4",
+    "fable-compiler": "^2.1.8",
+    "fable-utils": "^1.2.0",
     "react-dom": "16.6.0",
     "remotedev": "0.2.7",
     "whatwg-fetch": "^3.0.0"
