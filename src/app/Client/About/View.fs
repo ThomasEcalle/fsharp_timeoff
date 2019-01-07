@@ -9,4 +9,4 @@ let root =
         [ Heading.h3 [ ]
             [ str "About page" ]
           p [ ]
-            [ str "This is a starter project to use in an F# coding assignment working with Fable + Elmish + React on the front-end, Giraffe on the back-end." ] ] ]
+            [ str "YO" ] ] ]

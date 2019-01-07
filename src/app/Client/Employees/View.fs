@@ -33,8 +33,9 @@ let employeeList dispatch =
             ]
           tbody []
             [
-              for employeeNumber in 1..5 do
+              for employeeNumber in 2..5 do
                 yield employeeLine employeeNumber
+              
             ]
         ]
     ]

@@ -58,8 +58,6 @@ let root model dispatch =
                   ]
               ]
           ]
-        Heading.h3 [ ]
-                    [ str "Events for employee "; str balance.UserName ]
       ]
     
   | None ->
