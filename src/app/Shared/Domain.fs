@@ -81,3 +81,18 @@ type DummyDateProvider() =
      interface IDateProvider with 
          member this.getDate()  = 
              DateTime(2019, 03, 05)
+             
+
+module Utils =      
+    let getRequestDuration request = 
+            if request.Start.Date > request.End.Date then
+                0.0
+            else 
+                let days = (request.End.Date - request.Start.Date).TotalDays
+                let endDelta = match request.End.HalfDay with 
+                                | AM -> 0.5
+                                | PM -> 1.0
+                let startDelta = match request.Start.HalfDay with 
+                                    | AM -> 0.0
+                                    | PM -> 0.5
+                (days + endDelta) - startDelta

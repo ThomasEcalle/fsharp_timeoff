@@ -58,19 +58,6 @@ module Logic =
     let hasSameIdThan request1 request2 =
         request1.RequestId = request2.RequestId
     
-    let getRequestDuration request = 
-        if request.Start.Date > request.End.Date then
-            0.0
-        else 
-            let days = (request.End.Date - request.Start.Date).TotalDays
-            let endDelta = match request.End.HalfDay with 
-                            | AM -> 0.5
-                            | PM -> 1.0
-            let startDelta = match request.Start.HalfDay with 
-                                | AM -> 0.0
-                                | PM -> 0.5
-            (days + endDelta) - startDelta
-    
     let balanceYear (dateProvider : IDateProvider) = (dateProvider.getDate().Month - 1) * NB_TIMEOFF_PER_MONTH
         
     let overlapsWithAnyRequest (otherRequests: TimeOffRequest seq) request =
@@ -121,7 +108,7 @@ module Logic =
                 |> Seq.where (fun state -> state.IsActive)
                 |> Seq.map (fun state -> state.Request)
                 |> Seq.where (fun request -> request.Start.Date <= dateProvider.getDate() && request.Start.Date.Year = dateProvider.getDate().Year)
-                |> Seq.map (fun request -> getRequestDuration request) 
+                |> Seq.map (fun request -> Utils.getRequestDuration request) 
                 |> Seq.sum
             
     let planned (dateProvider: IDateProvider) (userRequests: UserRequestsState)  =
@@ -131,7 +118,7 @@ module Logic =
             |> Seq.where (fun state -> state.IsActive)
             |> Seq.map (fun state -> state.Request)
             |> Seq.where (fun request -> request.Start.Date > dateProvider.getDate())
-            |> Seq.map (fun request -> getRequestDuration request) 
+            |> Seq.map (fun request -> Utils.getRequestDuration request) 
             |> Seq.sum
     
     let daysObtainedTillFirstDayToThisYear (dateProvider: IDateProvider) = 
@@ -148,7 +135,7 @@ module Logic =
                     |> Seq.where (fun state -> state.IsActive)
                     |> Seq.map (fun state -> state.Request)
                     |> Seq.where (fun request -> request.Start.Date.Year < dateProvider.getDate().Year)
-                    |> Seq.map (fun request -> getRequestDuration request) 
+                    |> Seq.map (fun request -> Utils.getRequestDuration request) 
                     |> Seq.sum
                 
                 float(daysObtainedTillFirstDay) - totalTimeOff
@@ -156,7 +143,7 @@ module Logic =
     let historicForYear (date: DateTime) (userRequestsEvents: seq<RequestEvent>) =
         userRequestsEvents
             |> Seq.where (fun event -> event.Request.Start.Date.Year = date.Year)
-            |> Seq.sortBy(fun event -> event.Request.Start.Date)
+            |> Seq.sortBy(fun event -> event.EventDate)
             
     let decide (dateProvider: IDateProvider)(userRequests: UserRequestsState) (user: User) (command: Command) =
         let relatedUserId = command.UserId

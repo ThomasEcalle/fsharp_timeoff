@@ -6,6 +6,8 @@ open Fable.Helpers.React.Props
 open Fulma
 open Fulma.FontAwesome
 
+open System
+open System
 open Fable.Import.Browser
 open TimeOff
 open Types
@@ -16,16 +18,18 @@ let root model dispatch =
     let lines historic = 
       let line (requestEvent: RequestEvent) =
         let request = requestEvent.Request
+        let requestDuration = Utils.getRequestDuration request
         let (requestType, eventDate) = match requestEvent with 
                                         | RequestCreated (request, date) -> ("New Request", date)
-                                        | RequestValidated (request, date) -> ("Request Validated", date)
+                                        | RequestValidated (request, date) -> ("Request Validated by manager", date)
                                         | RequestCanceled (request, date) -> ("Request Cancelled", date)
                                         | RequestCancellationSent (request, date) -> ("Ask for request cancellation", date)
         tr [ ]
           [
             td [] [ str (eventDate.Date.Day.ToString() + "/" + eventDate.Date.Month.ToString() + "/" + eventDate.Date.Year.ToString())]
-            td [] [ str (request.Start.Date.Day.ToString() + "/" + request.Start.Date.Month.ToString() + "/" + request.Start.Date.Year.ToString() + " " + request.Start.HalfDay.ToString())]
-            td [] [ str (request.End.Date.Day.ToString() + "/" + request.End.Date.Month.ToString() + "/" + request.End.Date.Year.ToString() + " " + request.Start.HalfDay.ToString()) ]
+            td [] [ str (request.Start.Date.Day.ToString() + "/" + request.Start.Date.Month.ToString() + "/" + request.Start.Date.Year.ToString() + " " + string(request.Start.HalfDay))]
+            td [] [ str (request.End.Date.Day.ToString() + "/" + request.End.Date.Month.ToString() + "/" + request.End.Date.Year.ToString() + " " + string(request.End.HalfDay)) ]
+            td [] [ str ( string( sprintf "%.2f" requestDuration) ) ]
             td [] [ str (requestType) ]
           ]
       div []
@@ -40,6 +44,7 @@ let root model dispatch =
                         th [] [str "Date"]
                         th [] [str "From"]
                         th [] [str "To"]
+                        th [] [str "Days"]
                         th [] [str "Event"]
                       ]
                   ]
