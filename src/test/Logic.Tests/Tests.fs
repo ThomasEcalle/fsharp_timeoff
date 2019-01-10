@@ -93,7 +93,7 @@ let creationTests =
       Given [ ]
       |> ConnectedAs (Employee "jdoe")
       |> When (RequestTimeOff request)
-      |> Then (Ok [RequestCreated request]) "The request should have been created"
+      |> Then (Ok [RequestCreated (request, todayDateProvider.getDate())]) "The request should have been created"
     }
     test "A request cannot be created in past" {
           let request = {
@@ -119,10 +119,10 @@ let validationTests =
         Start = { Date = DateTime(2019, 3, 05); HalfDay = AM }
         End = { Date = DateTime(2019, 3, 05); HalfDay = PM } }
 
-      Given [ RequestCreated request ]
+      Given [ RequestCreated (request, todayDateProvider.getDate()) ]
       |> ConnectedAs Manager
       |> When (ValidateRequest ("jdoe", request.RequestId))
-      |> Then (Ok [RequestValidated request]) "The request should have been validated"
+      |> Then (Ok [RequestValidated (request, todayDateProvider.getDate())]) "The request should have been validated"
     }
   ]
 
@@ -138,10 +138,10 @@ let cancelationTests =
         End = { Date = DateTime(2019, 3, 05); HalfDay = PM } 
         }
 
-      Given [ RequestCreated request ]
+      Given [ RequestCreated (request, todayDateProvider.getDate()) ]
       |> ConnectedAs Manager
       |> When (CancelRequest ("jdoe", request.RequestId))
-      |> Then (Ok [RequestCanceled request]) "The request should have been canceled by the Manager"
+      |> Then (Ok [RequestCanceled (request, todayDateProvider.getDate())]) "The request should have been canceled by the Manager"
     }
     
     test "A request is cancelled by an Employee" {
@@ -152,10 +152,10 @@ let cancelationTests =
             End = { Date = DateTime(2019, 3, 28); HalfDay = PM } 
             }
     
-          Given [ RequestCreated request ]
+          Given [ RequestCreated (request, todayDateProvider.getDate()) ]
           |> ConnectedAs (Employee "thomas")
           |> When (CancelRequest ("thomas", request.RequestId))
-          |> Then (Ok [RequestCanceled request]) "The request should have been canceled by the employee"
+          |> Then (Ok [RequestCanceled (request, todayDateProvider.getDate())]) "The request should have been canceled by the employee"
      }
         
     test "An employee cannot cancel today's timeoff" {
@@ -168,7 +168,7 @@ let cancelationTests =
         End = { Date = todayDateProvider.getDate(); HalfDay = PM }
       }
       
-      Given [RequestCreated request]
+      Given [RequestCreated (request, todayDateProvider.getDate())]
       |> ConnectedAs (Employee "thomas")
       |> When (CancelRequest ("thomas", request.RequestId))
       |> Then (Error "Unable to cancel timeoff") "The request should not have been canceled by the employee"
@@ -182,10 +182,10 @@ let cancelationTests =
             End = { Date = todayDateProvider.getDate(); HalfDay = PM }
           }
           
-          Given [RequestCreated request]
+          Given [RequestCreated (request, todayDateProvider.getDate())]
           |> ConnectedAs (Employee "thomas")
           |> When (AskToCancelRequest ("thomas", request.RequestId))
-          |> Then (Ok [RequestCancellationSent request]) "The request should be waiting for cancellation"
+          |> Then (Ok [RequestCancellationSent (request, todayDateProvider.getDate())]) "The request should be waiting for cancellation"
         }
     
     test "A manager can confirm a cancellation demand" {
@@ -196,10 +196,10 @@ let cancelationTests =
                 End = { Date = todayDateProvider.getDate(); HalfDay = PM }
               }
               
-              Given [RequestCreated request; RequestCancellationSent request]
+              Given [RequestCreated (request, todayDateProvider.getDate()); RequestCancellationSent (request, todayDateProvider.getDate())]
               |> ConnectedAs Manager
               |> When (CancelRequest ("thomas", request.RequestId))
-              |> Then (Ok [RequestCanceled request]) "The request should be cancelled"
+              |> Then (Ok [RequestCanceled (request, todayDateProvider.getDate())]) "The request should be cancelled"
             }
         
   ]

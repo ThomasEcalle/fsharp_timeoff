@@ -20,6 +20,10 @@ let root model dispatch =
       match model.TransientPageModel with
       | BalanceModel balanceModel -> [ Balance.View.root balanceModel (BalanceMsg >> dispatch) ]
       | _ -> []
+    | Page.Historic _ ->
+          match model.TransientPageModel with
+          | HistoricModel historicModel -> [ Historic.View.root historicModel (HistoricMsg >> dispatch) ]
+          | _ -> []
     | Page.About -> [ About.View.root ]
 
   div

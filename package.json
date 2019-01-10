@@ -1,13 +1,16 @@
 {
   "private": true,
+  "scripts": { "client" : "cd src/app/Client && npx webpack-dev-server" },
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "@babel/runtime": "^7.0.0",
+    "bulma-calendar": "^0.1.7",
+    "bulma-tooltip": "^2.0.2",
+    "fable-compiler": "^2.1.8",
+    "fable-utils": "^1.2.0",
     "font-awesome": "^4.7.0",
     "react": "16.6.0",
     "react-bootstrap": "0.32.4",
-    "fable-compiler": "^2.1.8",
-    "fable-utils": "^1.2.0",
     "react-dom": "16.6.0",
     "remotedev": "0.2.7",
     "whatwg-fetch": "^3.0.0"

@@ -28,10 +28,14 @@
     <Compile Include="Balance/View.fs" />
     <Compile Include="Employees/View.fs" />
     <Compile Include="About/View.fs" />
+    <Compile Include="Historic\Types.fs" />
+    <Compile Include="Historic\State.fs" />
+    <Compile Include="Historic\View.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="State.fs" />
     <Compile Include="View.fs" />
     <Compile Include="App.fs" />
+    
   </ItemGroup>
   <Import Project="..\..\..\.paket\Paket.Restore.targets" />
 </Project>

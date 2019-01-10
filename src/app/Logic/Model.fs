@@ -34,10 +34,10 @@ module Logic =
 
     let evolveRequest state event =
         match event with
-        | RequestCreated request -> PendingValidation request
-        | RequestValidated request -> Validated request
-        | RequestCanceled request -> Cancelled request
-        | RequestCancellationSent request -> state
+        | RequestCreated (request, date) -> PendingValidation request
+        | RequestValidated (request, date) -> Validated request
+        | RequestCanceled (request, date) -> Cancelled request
+        | RequestCancellationSent (request, date) -> state
 
     let evolveUserRequests (userRequests: UserRequestsState) (event: RequestEvent) =
         let requestState = defaultArg (Map.tryFind event.Request.RequestId userRequests) NotCreated
@@ -89,28 +89,28 @@ module Logic =
         elif request.Start.Date <= dateProvider.getDate() then
             Error "The request starts in the past"
         else
-            Ok [RequestCreated request]
+            Ok [RequestCreated (request, dateProvider.getDate())]
 
-    let validateRequest requestState =
+    let validateRequest requestState (dateProvider: IDateProvider) =
         match requestState with
         | PendingValidation request ->
-            Ok [RequestValidated request]
+            Ok [RequestValidated (request, dateProvider.getDate())]
         | _ ->
             Error "Request cannot be validated"
     
-    let cancelRequest requestState =
+    let cancelRequest requestState (dateProvider: IDateProvider) =
             match requestState with
             | PendingValidation request
             | Validated request ->
-                Ok [RequestCanceled request]
+                Ok [RequestCanceled (request, dateProvider.getDate())]
             | _ ->
                 Error "Request cannot be cancelled"
     
-    let askToCancelRequest requestState =
+    let askToCancelRequest requestState (dateProvider: IDateProvider) =
                 match requestState with
                 | PendingValidation request
                 | Validated request ->
-                    Ok [RequestCancellationSent request]
+                    Ok [RequestCancellationSent (request, dateProvider.getDate())]
                 | _ ->
                     Error "Cannot ask to cancel request"
             
@@ -180,7 +180,7 @@ module Logic =
                     Error "Unauthorized"
                 else
                     let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
-                    validateRequest requestState
+                    validateRequest requestState dateProvider
             | CancelRequest (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                 if requestState = NotCreated then
@@ -188,11 +188,11 @@ module Logic =
                 elif user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
                         Error "Unable to cancel timeoff"
                 else
-                    cancelRequest requestState
+                    cancelRequest requestState dateProvider
             | AskToCancelRequest (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                 if user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
-                        askToCancelRequest requestState
+                        askToCancelRequest requestState dateProvider
                 else
                     Error "Unable to ask for cancellation"   
             

@@ -10,6 +10,7 @@ type Page =
     | About
     | Employees
     | Balance of userName:string option
+    | Historic of userName:string option
 
 module Pages =
     let toPath =
@@ -20,6 +21,8 @@ module Pages =
         | Page.Employees -> "#employees"
         | Page.Balance None -> "#balance"
         | Page.Balance (Some userName) -> sprintf "#balance/%s" userName
+        | Page.Historic None -> "#historic"
+        | Page.Historic (Some userName) -> sprintf "#historic/%s" userName
 
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =
@@ -30,6 +33,8 @@ module Pages =
             map Page.Employees (s "employees")
             map (Page.Balance << Some) (s "balance" </> str)
             map (Page.Balance None) (s "balance")
+            map (Page.Historic << Some) (s "historic" </> str)
+            map (Page.Historic None) (s "historic")
         ]
 
     let urlParser location =

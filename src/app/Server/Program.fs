@@ -57,7 +57,7 @@ module HttpHandlers =
                 let command = ValidateRequest (userAndRequestId.UserId, userAndRequestId.RequestId)
                 let result = handleCommand command
                 match result with
-                | Ok [RequestValidated timeOffRequest] -> return! json timeOffRequest next ctx
+                | Ok [RequestValidated (timeOffRequest, date)] -> return! json (timeOffRequest, date) next ctx
                 | Ok _ -> return! Successful.NO_CONTENT next ctx
                 | Error message ->
                     return! (BAD_REQUEST message) next ctx
@@ -100,6 +100,8 @@ module HttpHandlers =
 
 let webApp (eventStore: IStore<UserId, RequestEvent>) =
 
+    //eventStore.GetStream("thomas").Clear()
+
     let dateProvider = new DummyDateProvider()
     
     let getUserState (userId: UserId) = 
@@ -112,6 +114,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
         
     let retrieveBalance  (authentifiedUser: User) (userName: UserId) =
         let state = getUserState userName
+        //eventStore.GetStream(userName).Clear()
         Logic.getBalance dateProvider state authentifiedUser userName
         
     let retrieveHistoric (authentifiedUser: User) (userName: UserId) (date: DateTime) =
@@ -132,7 +135,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
 
         // Finally, return the result
         result
-    
+
     choose [
         subRoute "/api"
             (choose [

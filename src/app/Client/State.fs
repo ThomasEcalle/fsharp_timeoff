@@ -26,6 +26,13 @@ let urlUpdate (result: Page option) model =
       { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = BalanceModel m }, Cmd.map BalanceMsg cmd
     | None ->
       stayOnCurrentPage model
+  | Some (Page.Historic userName as page) ->
+      match model.Navigation.User with
+      | Some user ->
+        let m, cmd = Historic.State.init user userName
+        { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = HistoricModel m }, Cmd.map HistoricMsg cmd
+      | None ->
+        stayOnCurrentPage model
   | Some page ->
     { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = NoPageModel }, []
 
@@ -78,6 +85,11 @@ let update msg model =
     let (balanceModel, balanceCmd) = Balance.State.update msg balanceModel
     { model with TransientPageModel = BalanceModel balanceModel }, Cmd.map BalanceMsg balanceCmd
   | BalanceMsg _, _ -> model, Cmd.none
+  
+  | HistoricMsg msg, HistoricModel historicModel ->
+      let (historicModel, historicCmd) = Historic.State.update msg historicModel
+      { model with TransientPageModel = HistoricModel historicModel }, Cmd.map HistoricMsg historicCmd
+  | HistoricMsg _, _ -> model, Cmd.none
 
   | HomeMsg msg, _ ->
     let (home, homeCmd) = Home.State.update msg model.Home

@@ -52,16 +52,22 @@ type Command =
 
 // And our events
 type RequestEvent =
-    | RequestCreated of TimeOffRequest
-    | RequestCanceled of TimeOffRequest
-    | RequestCancellationSent of TimeOffRequest
-    | RequestValidated of TimeOffRequest with
+    | RequestCreated of TimeOffRequest * DateTime
+    | RequestCanceled of TimeOffRequest * DateTime
+    | RequestCancellationSent of TimeOffRequest * DateTime
+    | RequestValidated of TimeOffRequest  * DateTime with
     member this.Request : TimeOffRequest =
         match this with
-        | RequestCreated request -> request
-        | RequestValidated request -> request
-        | RequestCanceled request -> request
-        | RequestCancellationSent request -> request
+        | RequestCreated (request, date) -> request
+        | RequestValidated (request, date) -> request
+        | RequestCanceled (request, date) -> request
+        | RequestCancellationSent (request, date) -> request
+    member this.EventDate : DateTime =
+            match this with
+            | RequestCreated (request, date) -> date
+            | RequestValidated (request, date) -> date
+            | RequestCanceled (request, date) -> date
+            | RequestCancellationSent (request, date) -> date
 
 type IDateProvider =
    abstract member getDate: unit -> DateTime
