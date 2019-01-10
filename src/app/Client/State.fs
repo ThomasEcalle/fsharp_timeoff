@@ -33,11 +33,18 @@ let urlUpdate (result: Page option) model =
         { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = HistoricModel m }, Cmd.map HistoricMsg cmd
       | None ->
         stayOnCurrentPage model
+  | Some (Page.MakeRequest as page) ->
+        match model.Navigation.User with
+        | Some user ->
+          let m, cmd = MakeRequest.State.init model.Navigation.User
+          { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = MakeRequestModel m }, Cmd.map MakeRequestMsg cmd
+        | None ->
+          stayOnCurrentPage model
   | Some page ->
     { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = NoPageModel }, []
 
 let init result =
-  let (home, homeCmd) = MakeRequest.State.init()
+  let (home, homeCmd) = MakeRequest.State.init(LocalStorage.load "user")
   let (model, cmd) =
     urlUpdate result
       {
@@ -71,7 +78,7 @@ let update msg model =
     { model with Navigation = { model.Navigation with User = Some newUser } }, Navigation.newUrl (Pages.toPath Page.MakeRequest)
 
   | GlobalMsg LoggedOut, _ ->
-    { model with Navigation = { model.Navigation with User = None } }, Navigation.newUrl (Pages.toPath Page.MakeRequest)
+    { model with Navigation = { model.Navigation with User = None } }, Navigation.newUrl (Pages.toPath Page.Login)
 
   | GlobalMsg Logout, _ ->
     model, deleteUserCmd
@@ -91,6 +98,7 @@ let update msg model =
       { model with TransientPageModel = HistoricModel historicModel }, Cmd.map HistoricMsg historicCmd
   | HistoricMsg _, _ -> model, Cmd.none
 
-  | MakeRequestMsg msg, _ ->
-    let (home, homeCmd) = MakeRequest.State.update msg model.Home
-    { model with Home = home }, Cmd.map MakeRequestMsg homeCmd
+  | MakeRequestMsg msg, MakeRequestModel requestModel ->
+        let (requestModel, requestCmd) = MakeRequest.State.update msg requestModel
+        { model with TransientPageModel = MakeRequestModel requestModel }, Cmd.map MakeRequestMsg requestCmd
+  | MakeRequestMsg _, _ -> model, Cmd.none

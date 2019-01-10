@@ -15,6 +15,7 @@ type TransientPageModel =
     | LoginModel of Login.Types.Model
     | BalanceModel of Balance.Types.Model
     | HistoricModel of Historic.Types.Model
+    | MakeRequestModel of MakeRequest.Types.Model
 
 /// The composed model for the application, which is a single page state plus login information
 type Model = {

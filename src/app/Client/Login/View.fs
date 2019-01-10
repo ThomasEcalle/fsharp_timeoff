@@ -17,7 +17,7 @@ let root model (dispatch: Msg -> unit) =
     if not (String.IsNullOrEmpty model.ErrorMsg) then
       Notification.notification [ Notification.Color IsDanger ] [
         div [] [ str model.ErrorMsg ]
-        div [] [ str "Log in with either 'employee1', 'employee2', 'manager' or using your login as your password." ]
+        div [] [ str "Log in with either 'thomas', 'employee2', 'manager' or using your login as your password." ]
       ]
     else
       Notification.notification [ Notification.Color IsInfo ] [

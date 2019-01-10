@@ -9,4 +9,4 @@ let root =
         [ Heading.h3 [ ]
             [ str "About page" ]
           p [ ]
-            [ str "YO" ] ] ]
+            [ str "My life is potatoe." ] ] ]

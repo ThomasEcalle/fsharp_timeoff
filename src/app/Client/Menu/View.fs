@@ -29,10 +29,11 @@ let view (model: NavigationData) =
     [
       Menu.label [ ] [ str "General" ]
       Menu.list [ ]
-        [ yield menuItem "Make Request" Page.MakeRequest currentPage
+        [ 
           if isManager then
             yield menuItem "Employees" Page.Employees currentPage
           elif isLoggedIn then
+            yield menuItem "Make Request" Page.MakeRequest currentPage
             yield menuItem "Balance" (Page.Balance None) currentPage
             yield menuItem "Historic" (Page.Historic None) currentPage
           yield menuItem "About" Page.About currentPage ] ]

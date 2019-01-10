@@ -11,3 +11,6 @@ module ServerUrls =
     
     [<Literal>]
     let UserHistoric = "/api/timeoff/user-historic/"
+    
+    [<Literal>]
+    let SendRequest = "/api/timeoff/request/"
