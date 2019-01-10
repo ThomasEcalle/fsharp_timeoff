@@ -4,7 +4,7 @@ module Client.Types
 type AppMsg =
     | GlobalMsg of GlobalMsg
     | LoginMsg of Login.Types.Msg
-    | HomeMsg of Home.Types.Msg
+    | MakeRequestMsg of MakeRequest.Types.Msg
     | BalanceMsg of Balance.Types.Msg
     | HistoricMsg of Historic.Types.Msg
 
@@ -20,5 +20,5 @@ type TransientPageModel =
 type Model = {
         Navigation: NavigationData
         TransientPageModel: TransientPageModel
-        Home: Home.Types.Model // The home page model is stored separately in order to keep the state even when we navigate on other pages
+        Home: MakeRequest.Types.Model // The home page model is stored separately in order to keep the state even when we navigate on other pages
     }

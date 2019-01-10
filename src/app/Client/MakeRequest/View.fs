@@ -1,4 +1,4 @@
-module Client.Home.View
+module Client.MakeRequest.View
 
 open Fable.Helpers.React
 open Fulma

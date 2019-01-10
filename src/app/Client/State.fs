@@ -37,19 +37,19 @@ let urlUpdate (result: Page option) model =
     { model with Navigation = { model.Navigation with CurrentPage = page }; TransientPageModel = NoPageModel }, []
 
 let init result =
-  let (home, homeCmd) = Home.State.init()
+  let (home, homeCmd) = MakeRequest.State.init()
   let (model, cmd) =
     urlUpdate result
       {
         Navigation =
           {
             User = LocalStorage.load "user"
-            CurrentPage = Page.Home
+            CurrentPage = Page.MakeRequest
           }
         TransientPageModel = NoPageModel
         Home = home }
   model, Cmd.batch [ cmd
-                     Cmd.map HomeMsg homeCmd ]
+                     Cmd.map MakeRequestMsg homeCmd ]
 let loadUser () =
     LocalStorage.load "user"
 
@@ -68,10 +68,10 @@ let update msg model =
       model, Cmd.none
 
   | GlobalMsg (LoggedIn newUser), _ ->
-    { model with Navigation = { model.Navigation with User = Some newUser } }, Navigation.newUrl (Pages.toPath Page.Home)
+    { model with Navigation = { model.Navigation with User = Some newUser } }, Navigation.newUrl (Pages.toPath Page.MakeRequest)
 
   | GlobalMsg LoggedOut, _ ->
-    { model with Navigation = { model.Navigation with User = None } }, Navigation.newUrl (Pages.toPath Page.Home)
+    { model with Navigation = { model.Navigation with User = None } }, Navigation.newUrl (Pages.toPath Page.MakeRequest)
 
   | GlobalMsg Logout, _ ->
     model, deleteUserCmd
@@ -91,6 +91,6 @@ let update msg model =
       { model with TransientPageModel = HistoricModel historicModel }, Cmd.map HistoricMsg historicCmd
   | HistoricMsg _, _ -> model, Cmd.none
 
-  | HomeMsg msg, _ ->
-    let (home, homeCmd) = Home.State.update msg model.Home
-    { model with Home = home }, Cmd.map HomeMsg homeCmd
+  | MakeRequestMsg msg, _ ->
+    let (home, homeCmd) = MakeRequest.State.update msg model.Home
+    { model with Home = home }, Cmd.map MakeRequestMsg homeCmd

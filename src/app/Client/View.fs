@@ -10,7 +10,7 @@ open Client.Types
 let root model dispatch =
   let pageHtml =
     function
-    | Page.Home -> [ Home.View.root model.Home (HomeMsg >> dispatch) ]
+    | Page.MakeRequest -> [ MakeRequest.View.root model.Home (MakeRequestMsg >> dispatch) ]
     | Page.Login ->
       match model.TransientPageModel with
       | LoginModel loginModel -> [ Login.View.root loginModel (LoginMsg >> dispatch) ]

@@ -1,4 +1,4 @@
-module Client.Home.Types
+module Client.MakeRequest.Types
 
 type Model = {
   Counter: Client.Counter.Types.Model

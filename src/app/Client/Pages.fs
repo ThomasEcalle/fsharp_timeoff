@@ -5,7 +5,7 @@ open Elmish.Browser.UrlParser
 /// The different pages of the application. If you add a new page, then add an entry here.
 [<RequireQualifiedAccess>]
 type Page =
-    | Home
+    | MakeRequest
     | Login
     | About
     | Employees
@@ -15,7 +15,7 @@ type Page =
 module Pages =
     let toPath =
         function
-        | Page.Home -> "#home"
+        | Page.MakeRequest -> "#makeRequest"
         | Page.About -> "#about"
         | Page.Login -> "#login"
         | Page.Employees -> "#employees"
@@ -27,7 +27,7 @@ module Pages =
     /// The URL is turned into a Result.
     let pageParser : Parser<Page -> Page,_> =
         oneOf [
-            map Page.Home (s "home")
+            map Page.MakeRequest (s "makeRequest")
             map Page.Login (s "login")
             map Page.About (s "about")
             map Page.Employees (s "employees")
@@ -40,4 +40,4 @@ module Pages =
     let urlParser location =
         match parseHash pageParser location with
         | Some page -> Some page
-        | None -> parsePath (oneOf [ map Page.Home (s "") ]) location
+        | None -> parsePath (oneOf [ map Page.MakeRequest (s "") ]) location
