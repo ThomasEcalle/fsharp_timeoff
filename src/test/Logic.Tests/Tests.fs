@@ -2,8 +2,6 @@ module TimeOff.Tests
 
 open Expecto
 open System
-open System
-open System
 
 type TodayDateProvider() =    
     interface IDateProvider with 
@@ -217,6 +215,6 @@ let balanceTests =
           End = { Date = DateTime(2019, 3, 14); HalfDay = PM }
         }
         
-       Expect.equal (Logic.getRequestDuration request) 14.0 "The requests duration is not good"
+       Expect.equal (Utils.getRequestDuration request) 14.0 "The requests duration is not good"
     }
   ]

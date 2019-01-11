@@ -88,13 +88,22 @@ module Logic =
         | _ ->
             Error "Request cannot be validated"
     
-    let cancelRequest requestState (dateProvider: IDateProvider) =
+    let userCancelRequest requestState (dateProvider: IDateProvider) =
             match requestState with
             | PendingValidation request
             | Validated request ->
                 Ok [RequestCanceled (request, dateProvider.getDate())]
             | _ ->
                 Error "Request cannot be cancelled"
+                
+    let managerCancelRequest requestState (dateProvider: IDateProvider) =
+                match requestState with
+                | PendingValidation request
+                | Validated request
+                | PendingCancellation request ->
+                    Ok [RequestCanceled (request, dateProvider.getDate())]
+                | _ ->
+                    Error "Request cannot be cancelled"
     
     let askToCancelRequest requestState (dateProvider: IDateProvider) =
                 match requestState with
@@ -177,8 +186,11 @@ module Logic =
                         Error "request does not exist"
                 elif user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
                         Error "Unable to cancel timeoff"
-                else
-                    cancelRequest requestState dateProvider
+                elif user = Manager then
+                    managerCancelRequest requestState dateProvider
+                else 
+                    userCancelRequest requestState dateProvider
+                    
             | AskToCancelRequest (_, requestId) ->
                 let requestState = defaultArg (userRequests.TryFind requestId) NotCreated
                 if user <> Manager && requestState.Request.Start.Date <= dateProvider.getDate() then
