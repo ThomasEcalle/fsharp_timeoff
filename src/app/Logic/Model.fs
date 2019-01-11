@@ -186,8 +186,7 @@ module Logic =
                 else
                     Error "Unable to ask for cancellation"   
             
-    let getBalance (dateProvider: IDateProvider)(userRequests: UserRequestsState) (user: User) (userId: UserId) =
-        let relatedUserId = userId
+    let getBalance (dateProvider: IDateProvider)(userRequests: UserRequestsState) (user: User) (relatedUserId: UserId) =
         match user with
         | Employee userId when userId <> relatedUserId ->
                     Error "Unauthorized"
@@ -199,7 +198,7 @@ module Logic =
             
             let balance : UserVacationBalance = {
               Year = dateProvider.getDate().Year
-              UserName = userId
+              UserName = relatedUserId
               BalanceYear = balanceYear
               CarriedOver = carriedOver
               TakenToDate = takenToDate
@@ -208,4 +207,3 @@ module Logic =
             }
             
             Ok[balance]
-            

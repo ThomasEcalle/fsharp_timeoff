@@ -8,13 +8,14 @@ open Client
 open System.ComponentModel
 
 let employeeList dispatch =
-  let employeeLine (employeeNumber: int) =
-    let userName = sprintf "employee%d" employeeNumber
+  let employeeLine (employeeName: string) =
+    let userName = employeeName
     tr [ ]
       [
         td [] [ str userName ]
-        td [] [ str "Employee "; str (employeeNumber.ToString()) ]
+        td [] [ str "Employee "; str (userName) ]
         td [] [ a [ Href (Pages.toPath (Page.Balance (Some userName))) ] [ str "View balance" ] ]
+        td [] [ a [ Href (Pages.toPath (Page.Historic (Some userName))) ] [ str "View requests" ] ]
       ]
 
   div []
@@ -33,9 +34,9 @@ let employeeList dispatch =
             ]
           tbody []
             [
+              yield employeeLine ("thomas")
               for employeeNumber in 2..5 do
-                yield employeeLine employeeNumber
-              
+                yield employeeLine (sprintf "employee%d" employeeNumber)
             ]
         ]
     ]

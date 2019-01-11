@@ -4,6 +4,7 @@ open Elmish
 open Elmish.Browser.Navigation
 open Fable.Import
 open Global
+open TimeOff
 open Types
 
 let private stayOnCurrentPage model =
@@ -75,7 +76,10 @@ let update msg model =
       model, Cmd.none
 
   | GlobalMsg (LoggedIn newUser), _ ->
-    { model with Navigation = { model.Navigation with User = Some newUser } }, Navigation.newUrl (Pages.toPath Page.MakeRequest)
+    match newUser.User with 
+      | Manager -> { model with Navigation = { model.Navigation with User = Some newUser } }, Navigation.newUrl (Pages.toPath Page.Employees)
+      | _ -> { model with Navigation = { model.Navigation with User = Some newUser } }, Navigation.newUrl (Pages.toPath Page.MakeRequest)
+    
 
   | GlobalMsg LoggedOut, _ ->
     { model with Navigation = { model.Navigation with User = None } }, Navigation.newUrl (Pages.toPath Page.Login)

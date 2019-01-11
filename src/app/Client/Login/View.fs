@@ -21,7 +21,7 @@ let root model (dispatch: Msg -> unit) =
       ]
     else
       Notification.notification [ Notification.Color IsInfo ] [
-        str "Log in with either 'employee1', 'employee2', 'manager', using your login as your password."]
+        str "Log in with either 'thomas', 'employee2', 'manager', using your login as your password."]
 
   match model.State with
   | LoggedIn _ ->
