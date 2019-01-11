@@ -122,6 +122,19 @@ let validationTests =
       |> When (ValidateRequest ("jdoe", request.RequestId))
       |> Then (Ok [RequestValidated (request, todayDateProvider.getDate())]) "The request should have been validated"
     }
+    
+    test "A user cannot validate his request" {
+          let request = {
+            UserId = "jdoe"
+            RequestId = Guid.NewGuid()
+            Start = { Date = DateTime(2019, 3, 05); HalfDay = AM }
+            End = { Date = DateTime(2019, 3, 05); HalfDay = PM } }
+    
+          Given [ RequestCreated (request, todayDateProvider.getDate()) ]
+          |> ConnectedAs (Employee "jdoe")
+          |> When (ValidateRequest ("jdoe", request.RequestId))
+          |> Then (Error "Unauthorized") "The request should not be validated by user"
+        }
   ]
 
 [<Tests>]
@@ -156,7 +169,7 @@ let cancelationTests =
           |> Then (Ok [RequestCanceled (request, todayDateProvider.getDate())]) "The request should have been canceled by the employee"
      }
         
-    test "An employee cannot cancel today's timeoff" {
+    test "An employee cannot cancel today's or past timeoff" {
       let dateProvider = new TodayDateProvider()
       let todayDateProvider =  dateProvider :> IDateProvider
       let request = {
@@ -217,4 +230,15 @@ let balanceTests =
         
        Expect.equal (Utils.getRequestDuration request) 14.0 "The requests duration is not good"
     }
+    
+    test "Calcul planned timeoff" {
+           let request = {
+              UserId = "thomas"
+              RequestId = Guid.NewGuid()
+              Start = { Date = DateTime(2019, 3, 1); HalfDay = AM }
+              End = { Date = DateTime(2019, 3, 14); HalfDay = PM }
+            }
+            
+           Expect.equal (Utils.getRequestDuration request) 14.0 "The requests duration is not good"
+        }
   ]
