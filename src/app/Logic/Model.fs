@@ -15,18 +15,21 @@ module Logic =
     type RequestState =
         | NotCreated
         | PendingValidation of TimeOffRequest
+        | PendingCancellation of TimeOffRequest
         | Cancelled of TimeOffRequest
         | Validated of TimeOffRequest with
         member this.Request =
             match this with
             | NotCreated -> invalidOp "Not created"
             | PendingValidation request
+            | PendingCancellation request
             | Cancelled request
             | Validated request -> request
         member this.IsActive =
             match this with
             | NotCreated -> false
-            | PendingValidation _
+            | PendingValidation _ -> false
+            | PendingCancellation _ -> false
             | Cancelled _ -> false
             | Validated _ -> true
 
@@ -37,7 +40,7 @@ module Logic =
         | RequestCreated (request, date) -> PendingValidation request
         | RequestValidated (request, date) -> Validated request
         | RequestCanceled (request, date) -> Cancelled request
-        | RequestCancellationSent (request, date) -> state
+        | RequestCancellationSent (request, date) -> PendingCancellation request
 
     let evolveUserRequests (userRequests: UserRequestsState) (event: RequestEvent) =
         let requestState = defaultArg (Map.tryFind event.Request.RequestId userRequests) NotCreated
@@ -205,4 +208,4 @@ module Logic =
             }
             
             Ok[balance]
-                  
+            

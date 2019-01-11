@@ -23,14 +23,11 @@ let root model (dispatch: Msg -> unit) =
               div [] [ str model.SuccessMsg ]
             ]
     else 
-      Notification.notification [ Notification.Color IsInfo ] [
-                    div [] [ str "Please enter dates in future" ]
-                  ]
+      Heading.h3 [ ]
+                    [ str "Make a Request" ]
 
   form [ ] [
-  
-    Heading.h3 [ ]
-              [ str "Make a Request" ]
+ 
     notification
     
     Field.div [ ]

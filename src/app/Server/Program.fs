@@ -37,6 +37,8 @@ module HttpHandlers =
             UserId: UserId
             Year: String
         }
+        
+    
 
     let requestTimeOff (handleCommand: Command -> Result<RequestEvent list, string>) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -74,6 +76,18 @@ module HttpHandlers =
                     | Error message ->
                         return! (BAD_REQUEST message) next ctx
                 }
+                
+    let askToCancelTimeoff (handleCommand: Command -> Result<RequestEvent list, string>) =
+                fun (next: HttpFunc) (ctx: HttpContext) ->
+                    task {
+                        let userAndRequestId = ctx.BindQueryString<UserAndRequestId>()
+                        let command = AskToCancelRequest (userAndRequestId.UserId, userAndRequestId.RequestId)
+                        let result = handleCommand command
+                        match result with
+                        | Ok requestCancelled -> return! json requestCancelled next ctx
+                        | Error message ->
+                            return! (BAD_REQUEST message) next ctx
+                    }
 
     let getUserBalance (retrieveBalance: User -> UserId -> Result<UserVacationBalance list, string>) (authentifiedUser: User) (userName: string) =
         fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -148,6 +162,7 @@ let webApp (eventStore: IStore<UserId, RequestEvent>) =
                                     routex "/request/?" >=> HttpHandlers.requestTimeOff (handleCommand user)
                                     routex "/validate-request/?" >=> HttpHandlers.validateRequest (handleCommand user)
                                     routex "/cancel/?" >=> HttpHandlers.cancelTimeoff (handleCommand user)
+                                    routex "/askToCancel/?" >=> HttpHandlers.askToCancelTimeoff (handleCommand user)
                                 ])
                             GET >=> routef "/user-balance/%s" (HttpHandlers.getUserBalance retrieveBalance user)
                             GET >=> routex "/user-historic/?" >=> HttpHandlers.getUserHistoric retrieveHistoric user

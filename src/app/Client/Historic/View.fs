@@ -15,7 +15,9 @@ open Types
 let root model dispatch =
   match model.Historic with
   | Some historic ->
+        
     let lines historic = 
+                
       let line (requestEvent: RequestEvent) =
         let request = requestEvent.Request
         let requestDuration = Utils.getRequestDuration request
@@ -31,6 +33,7 @@ let root model dispatch =
             td [] [ str (request.End.Date.Day.ToString() + "/" + request.End.Date.Month.ToString() + "/" + request.End.Date.Year.ToString() + " " + string(request.End.HalfDay)) ]
             td [] [ str ( string( sprintf "%.2f" requestDuration) ) ]
             td [] [ str (requestType) ]
+            //td [] [ td [] [ button [ OnClick (fun ev -> dispatch (CancelRequest request.RequestId))] [ str "Cancel" ] ] ]
           ]
       div []
           [

@@ -1,5 +1,6 @@
 module Client.Historic.Types
 
+open System
 open System.Globalization
 open TimeOff
 open TimeOff.AuthTypes
@@ -19,4 +20,5 @@ type BodyToSend = {
 type Msg =
   | FetchHistoric
   | DisplayHistoric of List<RequestEvent>
+  | CancelRequest of Guid
   | NetworkError of exn
